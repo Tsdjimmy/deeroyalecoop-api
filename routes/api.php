@@ -17,3 +17,11 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin'], function () {
+    Route::post('register', [\App\Http\Controllers\AdminController::class, 'register']);
+});
+
+Route::middleware('auth:staff')->get('test/user', function() {
+    return response()->json(['foo' => 'bar', 'user' => auth()->user()]);
+  });

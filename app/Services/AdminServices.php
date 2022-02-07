@@ -68,6 +68,7 @@ class AdminServices
             $staff->password = password_hash($password, PASSWORD_DEFAULT);
             $staff->role = $role;
             $staff->status = $status;
+            $staff->last_seen = carbon::now();
             $staff->save();
 
             return response()->json(['message' => 'Account created successfully'], 200);
