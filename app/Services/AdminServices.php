@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Str;
 use Maatwebsite\Excel\Facades\Excel;
 use SebastianBergmann\RecursionContext\Exception;
+use App\Models\Staff;
 
 class AdminServices
 {
@@ -29,9 +30,10 @@ class AdminServices
 
             if (!password_verify($password, $staff->password)) return response()->json(['message' => 'Invalid credentials provided'], 400);
 
-            Staff::where('email', $email)->update(['last_login' => Carbon::now()]);
 
             $token = $staff->createToken('Personal Access Token', ['staff'])->accessToken;
+
+            Staff::where('email', $email)->update(['last_seen' => Carbon::now()]);
 
             return response()->json(
                 [
@@ -68,7 +70,7 @@ class AdminServices
             $staff->password = password_hash($password, PASSWORD_DEFAULT);
             $staff->role = $role;
             $staff->status = $status;
-            $staff->last_seen = carbon::now();
+            //$staff->last_seen = carbon::now();
             $staff->save();
 
             return response()->json(['message' => 'Account created successfully'], 200);
@@ -80,6 +82,26 @@ class AdminServices
             ], 400);
         }
 
+    }
+
+    public static function getAdminUsers()
+    {
+        try{
+            $all_staff = "a na";
+
+        return response()->json([
+            'message' => "All Admin",
+            'Data'  => $all_staff
+        ],200);
+        
+        }catch (\Exception $e) {
+            return response()->json([
+                'message' => 'An error occurred accessing your account',
+                'short_description' => $e->getMessage(),
+            ], 400);
+        }
+
+        
     }
 
 

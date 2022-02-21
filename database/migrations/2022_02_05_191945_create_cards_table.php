@@ -18,7 +18,7 @@ class CreateCardsTable extends Migration
             $table->string('card_no');
             $table->string('user_id');
             $table->string('active');
-            $table->enum('status', ['running', 'dormant', 'closed']);
+            $table->string('status', ['running', 'dormant', 'closed']);
             $table->timestamps();
         });
     }

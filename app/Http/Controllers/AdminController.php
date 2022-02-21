@@ -12,4 +12,14 @@ class AdminController extends Controller
     {
         return AdminServices::register($request);
     }
+
+    public function getAdminUsers(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getAdminUsers($request);
+    }
+
+    public function login(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::login($request);
+    }
 }
