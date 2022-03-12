@@ -198,7 +198,7 @@ class AdminServices
             $staff_id = $request->user()->id;
             $user = User::where('id', $user_id)->first();
             $admin = Staff::where('id', $staff_id)->first();
-            $card_id = Card::where('user_id', $user_id)->pluck('id');
+            $card_id = $request->input('card_id');
             $savings = Savings::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
             $amount = $request->amount;
 
@@ -213,7 +213,7 @@ class AdminServices
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
 
             return response()->json([
                 'message' => 'Credited Successfully',
@@ -234,6 +234,7 @@ class AdminServices
             $user_id = $request->input('user_id');
             $staff_id = $request->user()->id;
             $user = User::where('id', $user_id)->first();
+            $card_id = $request->input('card_id');
             $admin = Staff::where('id', $staff_id)->first();
             $savings = Savings::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
             $amount = $request->amount;
@@ -249,7 +250,7 @@ class AdminServices
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
 
             return response()->json([
                 'message' => 'Debited Successfully',
@@ -285,6 +286,7 @@ class AdminServices
             $balance = $amount_borrowed;
             $user_id = $request->input('user_id');
             $staff_id = $request->user()->id;
+            $card_id = $request->input('card_id');
             $start_date = $request->input('start_date');
             $end_date = $request->input('end_date');
             $duration = $request->input('duration');
@@ -299,6 +301,7 @@ class AdminServices
             $loan->amount_paid = $amount_paid;
             $loan->user_id = $user_id;
             $loan->staff_id = $staff_id;
+            $loan->card_id = $card_id;
             $loan->start_date = $start_date;
             $loan->end_date = $end_date;
             $loan->duration = $duration;
@@ -321,10 +324,30 @@ class AdminServices
         
     }
 
-    public static function disburseLoan($request)
+    public static function repayLoan($request)
     {
         try{
-            $loan = Loans::where('');
+            $user_id = $request->input('user_id');
+            $card_id = $request->input('card_id');
+            $amount_paid = $request->input('amount_paid');
+            $staff_id = $request->user()->id;
+            $transaction_type = 'loans';
+            $transaction_tag = 'savings';
+            $loan = Loans::where(['user_id' => $user_id, 'card_id' => $card_id])
+                    ->update([
+                        'amount_paid' => $amount_paid,
+                        'user_id' => $user_id,
+                        'staff_id' => $staff_id,
+                        'card_id' => $card_id,
+                    ],200);
+                    $transaction = new GeneralHelper;
+                    $transaction->transactionLog($user_id, $amount_paid, $staff_id, $transaction_tag, $transaction_type, $card_id);
+
+                    return response()->json([
+                        "message" => "Loan repayment added successfully",
+                        "data" => $loan
+                    ],200);
+                    
         }catch (\Exception $e)
         {
             return response()->json([

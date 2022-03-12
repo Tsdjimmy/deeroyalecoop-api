@@ -20,6 +20,7 @@ class CreateLoansTable extends Migration
             $table->double('amount_paid')->nullable();
             $table->integer('user_id');
             $table->integer('staff_id');
+            $table->integer('card_id');
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->integer('duration')->nullable();

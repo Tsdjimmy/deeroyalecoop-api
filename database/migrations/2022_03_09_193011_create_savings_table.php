@@ -16,6 +16,7 @@ class CreateSavingsTable extends Migration
         Schema::create('savings', function (Blueprint $table) {
             $table->id();
             $table->integer('user_id');
+            $table->integer('card_id');
             $table->enum('transaction_type', ['credit', 'debit']);
             $table->double('amount');
             $table->double('amount_before');
