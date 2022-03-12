@@ -18,6 +18,7 @@ class CreateTransactionLogsTable extends Migration
             $table->double('amount');
             $table->integer('user_id');
             $table->integer('staff_id');
+            $table->integer('card_id');
             $table->enum('transaction_type', ['credit', 'debit']);
             $table->enum('transaction_tag', ['savings', 'loans', 'purchases', 'leases']);
             $table->timestamps();
