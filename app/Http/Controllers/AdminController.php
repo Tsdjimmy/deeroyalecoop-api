@@ -22,4 +22,34 @@ class AdminController extends Controller
     {
         return AdminServices::login($request);
     }
+
+     public function registerUsers(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::registerUsers($request);
+    }
+
+    public function addBranch(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::addBranch($request);
+    }
+    
+    public function creditSavings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::creditSavings($request);
+    }
+
+    public function debitSavings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::debitSavings($request);
+    }
+
+    public function createLoanPlan(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::createLoanPlan($request);
+    }
+
+    public function addCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::addCard($request);
+    }
 }

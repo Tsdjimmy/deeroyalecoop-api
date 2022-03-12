@@ -28,6 +28,12 @@ Route::post('/user/register', [\App\Http\Controllers\UserController::class, 'reg
 Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin'], function () {
     Route::get('/getAdminUsers', [\App\Http\Controllers\AdminController::class, 'getAdminUsers']);
     Route::post('create-staff', [\App\Http\Controllers\AdminController::class, 'register']);
+    Route::post('create-user', [\App\Http\Controllers\AdminController::class, 'registerUsers']);
+    Route::post('create-branch', [\App\Http\Controllers\AdminController::class, 'addBranch']);
+    Route::post('credit-user-savings', [\App\Http\Controllers\AdminController::class, 'creditSavings']);
+    Route::post('debit-user-savings', [\App\Http\Controllers\AdminController::class, 'debitSavings']);
+    Route::post('create-loan-plan', [\App\Http\Controllers\AdminController::class, 'createLoanPlan']);
+    Route::post('add-card', [\App\Http\Controllers\AdminController::class, 'addCard']);
 
 });
 

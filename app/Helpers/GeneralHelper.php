@@ -7,7 +7,7 @@ namespace App\Helpers;
 use App\Events\MailEvent;
 use App\Events\SMSEvent;
 use App\Models\Code;
-use App\Models\Log;
+use App\Models\TransactionLogs;
 use App\Models\PayFlow;
 use App\Models\Pin;
 use App\Models\Transaction;
@@ -132,7 +132,31 @@ class GeneralHelper
         ];
     }
 
-    public static function auditLogAdmin($description, $sid, $uid = null)
+    public static function transaction($amount, $amount_after, $transaction_type)
     {
+        if($transaction_type == 'cr')
+        {
+            $amount_after = $amount_after + $amount;
+            return $amount_after;
+        }
+
+        if($transaction_type == 'dr')
+        {
+            $amount_after = $amount_after - $amount;
+            return $amount_after;
+        }
     }
+    
+    public static function transactionLog($user_id, $amount, $staff_id, $transaction_tag, $transaction_type)
+    {
+        $transaction_log = new TransactionLogs();
+        $transaction_log->user_id = $user_id;
+        $transaction_log->amount = $amount;
+        $transaction_log->staff_id = $staff_id;
+        $transaction_log->transaction_tag = $transaction_tag;
+        $transaction_log->transaction_type = $transaction_type;
+
+        $transaction_log->save();
+    }
+    
 }
