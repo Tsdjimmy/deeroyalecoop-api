@@ -357,4 +357,15 @@ class AdminServices
         }
     }
 
+    public static function purchases()
+    {
+
+    }
+
+    public static function leases()
+    {
+
+    }
+    
+
 }
