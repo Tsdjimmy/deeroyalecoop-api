@@ -11,4 +11,21 @@ class UserController extends Controller
     {
         return UserServices::register($request);
     }
+
+    public function signIn(Request $request)
+    {
+        return AuthenticationServices::signIn($request);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        return AuthenticationServices::forgotPassword($request);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        return AuthenticationServices::resetPassword($request);
+    }
+
+
 }

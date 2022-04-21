@@ -114,22 +114,15 @@ class AuthenticationServices
             if (!password_verify($password, $user->password))
                 return response()->json(['message' => 'Invalid user credentials provided'], 400);
 
-            $user->last_login = Carbon::now();
-            $user->save();
 
             $token = $user->createToken('Personal Access Token', ['user'])->accessToken;
-
-            $unique_key = Str::random(16);
-            $user->last_login_ip = $unique_key;
-            $user->save();
 
             return response()->json(
                 [
                     'message' => "Access granted",
                     'data' => [
                         'user' => $user,
-                        'token' => $token,
-                        'unique_key' => $unique_key
+                        'token' => $token
                     ]
                 ]
             );
