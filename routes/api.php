@@ -30,17 +30,22 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
     Route::post('create-staff', [\App\Http\Controllers\AdminController::class, 'register']);
     Route::post('create-user', [\App\Http\Controllers\AdminController::class, 'registerUsers']);
     Route::post('create-branch', [\App\Http\Controllers\AdminController::class, 'addBranch']);
+    Route::get('list-branches', [\App\Http\Controllers\AdminController::class, 'listBranches']);
     Route::post('credit-user-savings', [\App\Http\Controllers\AdminController::class, 'creditSavings']);
     Route::post('debit-user-savings', [\App\Http\Controllers\AdminController::class, 'debitSavings']);
     Route::post('create-loan-plan', [\App\Http\Controllers\AdminController::class, 'createLoanPlan']);
     Route::post('add-card', [\App\Http\Controllers\AdminController::class, 'addCard']);
     Route::get('get-card', [\App\Http\Controllers\AdminController::class, 'getCard']);
+    Route::post('create-purchase', [\App\Http\Controllers\AdminController::class, 'purchases']);
+    Route::get('list-users', [\App\Http\Controllers\AdminController::class, 'listUsers']);
+    Route::get('get-user-details/{id}', [\App\Http\Controllers\AdminController::class, 'getUser']);
+    Route::post('edit-user', [\App\Http\Controllers\AdminController::class, 'editUser']);
 
 });
 
 Route::group(['middleware' => ['auth:api', 'scopes:user'], 'prefix' => 'users'], function () {
     Route::get('/dashboard', [\App\Http\Controllers\UserController::class, 'dashboard']); #GOD IS IN CHARGE
-    Route::get('get-card', [\App\Http\Controllers\UserController::class, 'getCard']);
+    // Route::get('get-card', [\App\Http\Controllers\UserController::class, 'getCard']);
     Route::get('notification', [\App\Http\Controllers\UserController::class, 'notification']);
     Route::get('transaction-history', [\App\Http\Controllers\UserController::class, 'transactionHistory']);
     Route::get('transaction/{type}', [\App\Http\Controllers\UserController::class, 'transactionByType']);

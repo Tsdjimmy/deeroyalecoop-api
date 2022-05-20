@@ -32,6 +32,11 @@ class AdminController extends Controller
     {
         return AdminServices::addBranch($request);
     }
+
+    public function listBranches(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::listBranches($request);
+    }
     
     public function creditSavings(Request $request): \Illuminate\Http\JsonResponse
     {
@@ -51,5 +56,30 @@ class AdminController extends Controller
     public function addCard(Request $request): \Illuminate\Http\JsonResponse
     {
         return AdminServices::addCard($request);
+    }
+
+    public function getCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getCard($request);
+    }
+   
+    public function purchases(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::purchases($request);
+    }
+
+    public function listUsers(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::listUsers($request);
+    }
+
+    public function getUser(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getUser($request);
+    }
+
+    public function editUser(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::editUser($request);
     }
 }

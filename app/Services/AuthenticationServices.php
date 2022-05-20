@@ -47,12 +47,12 @@ class AuthenticationServices
             $user->phone_number = $phone_number;
             $user->last_login = Carbon::now();
 
-            $wallet = new Wallet();
-            $wallet->uid = $user->id;
-            $wallet->save();
+            // $wallet = new Wallet();
+            // $wallet->uid = $user->id;
+            // $wallet->save();
 
             GeneralHelper::sendEmailVerificationCode($user);
-            self::sendWelcomeMail($user);
+            // self::sendWelcomeMail($user);
 
             $token = $user->createToken('Personal Access Token', ['user'])->accessToken;
 
@@ -82,15 +82,15 @@ class AuthenticationServices
         }
     }
 
-    public static function sendWelcomeMail($user)
-    {
-        $email = $user->email;
-        $data = [
-            'type' => 'welcome',
-            'full_name' => $user->full_name
-        ];
-        event(new MailEvent($email, $data));
-    }
+    // public static function sendWelcomeMail($user)
+    // {
+    //     $email = $user->email;
+    //     $data = [
+    //         'type' => 'welcome',
+    //         'full_name' => $user->full_name
+    //     ];
+    //     event(new MailEvent($email, $data));
+    // }
 
     public static function signIn($request): JsonResponse
     {
@@ -155,7 +155,7 @@ class AuthenticationServices
                 'full_name' => $user->full_name
             ];
 
-            event(new MailEvent($email, $data));
+            // event(new MailEvent($email, $data));
 
             return response()->json([
                 'message' => 'Reset code sent to your registered email address.'
@@ -184,9 +184,9 @@ class AuthenticationServices
 
             $uid = $user->id;
 
-            $codeRecord = Code::where(['code' => $code,'uid' => $uid, 'event' => 'reset'])->orderBy('created_at', 'desc')->first();
+            // $codeRecord = Code::where(['code' => $code,'uid' => $uid, 'event' => 'reset'])->orderBy('created_at', 'desc')->first();
 
-            if (is_null($codeRecord))
+            // if (is_null($codeRecord))
                 return response()->json(['message' => 'No reset record found for this user.'], 400);
 
 
@@ -194,7 +194,7 @@ class AuthenticationServices
             $user->password = bcrypt($password);
             $user->save();
 
-            Code::where('id', $codeRecord->id)->delete();
+            // Code::where('id', $codeRecord->id)->delete();
 
             return response()->json(['message' => 'Password reset successfully'], 200);
 
