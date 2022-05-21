@@ -7,7 +7,7 @@ namespace App\services;
 use App\Domain\Services\Kernel;
 use App\Domain\Services\ServicesInterface;
 use App\helpers\GeneralHelper;
-use App\helpers\SMSHelper;
+use App\helpers\SMSHelpers;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +20,7 @@ use App\Models\Savings;
 use App\Models\Rates;
 use App\Models\Loans;
 use App\Models\Cards;
+use App\Models\Purchase;
 use Illuminate\Support\Facades\Validator;
 
 class AdminServices
@@ -77,7 +78,7 @@ class AdminServices
             $staff->password = password_hash($password, PASSWORD_DEFAULT);
             $staff->role = $role;
             $staff->status = $status;
-            //$staff->last_seen = carbon::now();
+            $staff->last_seen = carbon::now();
             $staff->save();
 
             return response()->json(['message' => 'Account created successfully'], 200);
@@ -119,14 +120,15 @@ class AdminServices
             $user->password = request()->input('password');
             $user->save();
 
-            $savings = new Savings();
-            $savings->user_id = $user->id;
-            $savings->amount = 0;
-            $savings->amount_before = 0;
-            $savings->amount_after = 0;
-            $savings->transaction_type = 'credit';
-            $savings->staff_id = $request->user()->id;
-            $savings->save();
+            // $savings = new Savings();
+            // $savings->user_id = $user->id;
+            // $savings->card_id = 
+            // $savings->amount = 0;
+            // $savings->amount_before = 0;
+            // $savings->amount_after = 0;
+            // $savings->transaction_type = 'credit';
+            // $savings->staff_id = $request->user()->id;
+            // $savings->save();
 
             // $sendSMS = new SMSHelper();
             return response()->json([
@@ -142,6 +144,16 @@ class AdminServices
     }
    
 }
+
+    public static function editUser($request)
+    {
+        $user = User::where('id', $request->input('user_id'))->first();
+        $input = $request->all();
+
+        $user->fill($input)->update();
+
+        return response()->json(['message' => 'Updated Successfully', 'data' => $user],200);
+    }
 
     public static function addBranch($request)
         {
@@ -165,6 +177,15 @@ class AdminServices
                 ], 400);
         }
     
+    }
+
+    public static function listBranches()
+    {
+        $all_branches = Branches::all();
+        if(empty($all_branches))
+        return response()->json(['message' => 'Data not found'],404);
+
+        return response()->json(['message' => 'Fetched Successfully', 'data' => $all_branches],200);
     }
 
     public static function addCard($request)
@@ -195,13 +216,26 @@ class AdminServices
     public static function getCard($request)
     {
         $uid = $request->input('uid');
-        $cards = Cards::where('user_id', $uid)->first();
+        $cards = Cards::where('cards.user_id', $uid)
+                ->select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name',
+                 'users.email', 'cards.active', 'cards.status')
+                ->join('users', 'cards.user_id', '=', 'users.id')
+                // ->leftjoin('savings', 'cards.user_id', '=', 'savings.user_id')
+                // ->join('savings', 'wallet.user_id', '=', 'user.id')
+                ->get();
 
-        if(empty($cards))
+        if(!$cards)
         return response()->json(['message' => 'No cards were found'],404);
+
+        $savingsData = Savings::where('user_id', $uid)->get();
+        // var_dump($savingsData[0]->amount);exit();
+        $savingsAmount = $savingsData[0]->amount;
+
+        $cards_conv = json_decode(json_encode($cards), true);
+            $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
         
         if(!empty($cards))
-        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
+        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards_conv],200);
     }
         
 
@@ -232,7 +266,7 @@ class AdminServices
             $user_name = $user->last_name;
             $phone_number = $user->phone;
             $message = "Dear ". $user_name." , your Deeroyale account has been credited with the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
-            $sms = new SMSHelper();
+            $sms = new SMSHelpers();
             $sms::sendSMS($phone_number, $message);
 
             return response()->json([
@@ -390,7 +424,7 @@ class AdminServices
         }
     }
 
-    public static function purchases()
+    public static function purchases($request)
     {    
         try{
             $user_id = $request->input('user_id');
@@ -399,24 +433,29 @@ class AdminServices
             $admin = Staff::where('id', $staff_id)->first();
             $card_id = $request->input('card_id');
             $purchase = Purchase::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
+            // var_dump($purchase);exit();
             $amount = $request->amount;
 
+            $purchase_after = ($purchase->amount_after == null) ? 0 : 0;
+    //     $costPerPage = ($channel == 'wallet') ? env('COST_PER_PAGE') : env('UNIT_COST_PER_PAGE');
+
             $transaction = new GeneralHelper;
-            $amount_after = $transaction->transaction($amount, $purchase->amount_after, 'cr');  
+            $amount_after = $transaction->transaction($amount, $purchase_after, 'cr');  
             $transaction_type = 'credit';
 
-            $purchaseData = Savings::where('user_id', $user->id)
-            ->update(['staff_id' =>  $staff_id,
+            $purchaseData = Purchase::where('user_id', $user->id)
+            ->update([
+                    'staff_id' =>  $staff_id,
                     'amount' => $request->amount,
                     'amount_before' => $purchase->amount_after,
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'purchases', $transaction_type, $card_id);
 
             return response()->json([
                 'message' => 'Credited Successfully',
-                'data' => $savingsData
+                'data' => $purchaseData
             ], 200);
         }catch (\Exception $e)
             {
@@ -430,6 +469,19 @@ class AdminServices
     public static function leases()
     {
 
+    }
+
+    public static function listUsers()
+    {
+        $users = user::all();
+        return response()->json(["message" => "Fetched all users", "data" => $users],200);
+    }
+
+    public static function getUser($request)
+    {
+        $uid = $request->input('user_id');
+        $users = user::where('id', $uid)->first();
+        return response()->json(["message" => "Fetched user details", "data" => $users],200);
     }
     
 
