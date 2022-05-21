@@ -7,6 +7,7 @@ namespace App\services;
 use App\Domain\Services\Kernel;
 use App\Domain\Services\ServicesInterface;
 use App\helpers\GeneralHelper;
+use App\helpers\SMSHelper;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
@@ -127,6 +128,7 @@ class AdminServices
             $savings->staff_id = $request->user()->id;
             $savings->save();
 
+            // $sendSMS = new SMSHelper();
             return response()->json([
                 'message' => "Successfully registered",
                 'data' => $user
@@ -189,6 +191,18 @@ class AdminServices
        
     }
         }
+    
+    public static function getCard($request)
+    {
+        $uid = $request->input('uid');
+        $cards = Cards::where('user_id', $uid)->first();
+
+        if(empty($cards))
+        return response()->json(['message' => 'No cards were found'],404);
+        
+        if(!empty($cards))
+        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
+    }
         
 
     public static function creditSavings($request)
@@ -214,6 +228,12 @@ class AdminServices
                     'transaction_type' => $transaction_type
                 ]);
                 $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
+            
+            $user_name = $user->last_name;
+            $phone_number = $user->phone;
+            $message = "Dear ". $user_name." , your Deeroyale account has been credited with the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
+            $sms = new SMSHelper();
+            $sms::sendSMS($phone_number, $message);
 
             return response()->json([
                 'message' => 'Credited Successfully',
@@ -251,6 +271,12 @@ class AdminServices
                     'transaction_type' => $transaction_type
                 ]);
                 $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
+           
+            $user_name = $user->last_name;
+            $phone_number = $user->phone;
+            $message = "Dear ". $user_name." , your Deeroyale account has been debited of the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
+            $sms = new SMSHelper();
+            $sms::sendSMS($phone_number, $message);
 
             return response()->json([
                 'message' => 'Debited Successfully',
@@ -309,6 +335,13 @@ class AdminServices
             $loan->interest_id = $interest_id;
             $loan->status = $status;
             $loan->save();
+
+            // $user_name = $user->last_name;
+            // $phone_number = $user->phone;
+            // $message = "Dear ". $user_name." , your Deeroyale account has been credited with the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
+            // $sms = new SMSHelper();
+            // $sms::sendSMS($phone_number, $message);
+
     
             return response()->json([
                 'message' => 'Loan Plan Created Successfully',
@@ -358,8 +391,40 @@ class AdminServices
     }
 
     public static function purchases()
-    {
+    {    
+        try{
+            $user_id = $request->input('user_id');
+            $staff_id = $request->user()->id;
+            $user = User::where('id', $user_id)->first();
+            $admin = Staff::where('id', $staff_id)->first();
+            $card_id = $request->input('card_id');
+            $purchase = Purchase::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
+            $amount = $request->amount;
 
+            $transaction = new GeneralHelper;
+            $amount_after = $transaction->transaction($amount, $purchase->amount_after, 'cr');  
+            $transaction_type = 'credit';
+
+            $purchaseData = Savings::where('user_id', $user->id)
+            ->update(['staff_id' =>  $staff_id,
+                    'amount' => $request->amount,
+                    'amount_before' => $purchase->amount_after,
+                    'amount_after' => $amount_after,
+                    'transaction_type' => $transaction_type
+                ]);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
+
+            return response()->json([
+                'message' => 'Credited Successfully',
+                'data' => $savingsData
+            ], 200);
+        }catch (\Exception $e)
+            {
+                return response()->json([
+                    'message' => 'An error occurred accessing your account',
+                    'short_description' => $e->getMessage(),
+                ], 400);
+            }     
     }
 
     public static function leases()

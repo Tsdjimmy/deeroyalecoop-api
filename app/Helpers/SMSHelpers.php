@@ -9,7 +9,29 @@ use GuzzleHttp\Client;
 class SMSHelpers
 {
 
-    public function sendSms($phone_number, $message, $data, $code)
+    public function sendSMS($phone_number, $message)
+    {
+        $phone_number = preg_replace('/^0/', '234', $phone_number);
+
+        $data = array("api_key" => "TLkI89jKjiuZQ8CS6Vp3kRVOzmiVu6iAYWdeN6YvekyqgWq7wokuc0rqWZMWS0",
+            "type" => "plain",
+            "to" => $phone_number,
+            "from" => "N-Alert",
+            "channel" => "dnd",
+            "sms" => $message
+        );
+        $client = new Client();
+        $request = $client->request(
+            'POST',
+            'https://api.ng.termii.com/api/sms/send',
+            [
+                'json' => $data
+            ]
+        );
+        $response = json_decode($request->getBody(), true);
+    }
+
+    public function sendOtpSms($phone_number, $message, $data, $code)
     {
         $phone_number = preg_replace('/^0/', '234', $phone_number);
 
