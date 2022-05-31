@@ -33,7 +33,13 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
     Route::get('list-branches', [\App\Http\Controllers\AdminController::class, 'listBranches']);
     Route::post('credit-user-savings', [\App\Http\Controllers\AdminController::class, 'creditSavings']);
     Route::post('debit-user-savings', [\App\Http\Controllers\AdminController::class, 'debitSavings']);
+    Route::get('get-savings-by-card', [\App\Http\Controllers\AdminController::class, 'getUserSavingsbyCard']);
+    Route::get('get-savings', [\App\Http\Controllers\AdminController::class, 'getAllSavings']);
     Route::post('create-loan-plan', [\App\Http\Controllers\AdminController::class, 'createLoanPlan']);
+    Route::post('repay-plan', [\App\Http\Controllers\AdminController::class, 'repayLoan']);
+    Route::get('loan-plans', [\App\Http\Controllers\AdminController::class, 'getLoanPlans']);
+    Route::get('loan-by-card', [\App\Http\Controllers\AdminController::class, 'getLoanPlanByCard']);
+    Route::get('loan-by-user', [\App\Http\Controllers\AdminController::class, 'getUserLoanPlans']);
     Route::post('add-card', [\App\Http\Controllers\AdminController::class, 'addCard']);
     Route::get('get-card', [\App\Http\Controllers\AdminController::class, 'getCard']);
     Route::post('create-purchase', [\App\Http\Controllers\AdminController::class, 'purchases']);

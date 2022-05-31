@@ -48,9 +48,39 @@ class AdminController extends Controller
         return AdminServices::debitSavings($request);
     }
 
+    public function getUserSavingsbyCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getUserSavingsbyCard($request);
+    }
+
+    public function getAllSavings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getAllSavings($request);
+    }
+
     public function createLoanPlan(Request $request): \Illuminate\Http\JsonResponse
     {
         return AdminServices::createLoanPlan($request);
+    }
+
+    public function repayLoan(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::repayLoan($request);
+    }
+
+    public function getLoanPlans(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getLoanPlans($request);
+    }
+
+    public function getLoanPlanByCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getLoanPlanByCard($request);
+    }
+    
+    public function getUserLoanPlans(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getUserLoanPlans($request);
     }
 
     public function addCard(Request $request): \Illuminate\Http\JsonResponse

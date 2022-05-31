@@ -267,7 +267,7 @@ class AdminServices
             $phone_number = $user->phone;
             $message = "Dear ". $user_name." , your Deeroyale account has been credited with the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
             $sms = new SMSHelpers();
-            $sms::sendSMS($phone_number, $message);
+            $sms->sendSMS($phone_number, $message);
 
             return response()->json([
                 'message' => 'Credited Successfully',
@@ -323,6 +323,37 @@ class AdminServices
                     'short_description' => $e->getMessage(),
                 ], 400);
             }
+    }
+
+    public static function getUserSavingsbyCard($request)
+    {
+        try{
+            $card = $request->input('card_id');
+            $target = ['savings.card_id' => $card];
+            $savings = Savings::select('savings.*', 'users.first_name', 'users.last_name')
+            ->join('users', 'users.id', '=', 'savings.user_id')->where($target)->get();
+
+            // if($savings === 'false') return response()->json(['message' => 'No record found for this card no'], 404);
+
+            return response()->json(['message' => 'Fetched Successfully', 'data' => $savings],200);
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred',
+            'short_description' => $e->getMessage()], 400);
+        }
+    }
+
+    public static function getAllSavings($request)
+    {
+        try{
+            $savings = Savings::select('savings.*', 'users.first_name', 'users.last_name')
+            ->join('users', 'users.id', '=', 'savings.user_id')->get();
+            return response()->json(['message' => 'Fetched Successfully', 'data' => $savings],200);
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred',
+            'short_description' => $e->getMessage()], 400);
+        }
     }
 
     public static function createLoanPlan($request)
@@ -398,11 +429,13 @@ class AdminServices
             $card_id = $request->input('card_id');
             $amount_paid = $request->input('amount_paid');
             $staff_id = $request->user()->id;
-            $transaction_type = 'loans';
-            $transaction_tag = 'savings';
+            $transaction_type = 'debit';
+            $transaction_tag = 'loans';
+            $old_amount = Loans::where(['user_id' => $user_id, 'card_id' => $card_id])->pluck('amount_paid');
+            $new_amount = $old_amount[0] + $amount_paid;
             $loan = Loans::where(['user_id' => $user_id, 'card_id' => $card_id])
                     ->update([
-                        'amount_paid' => $amount_paid,
+                        'amount_paid' => $new_amount,
                         'user_id' => $user_id,
                         'staff_id' => $staff_id,
                         'card_id' => $card_id,
@@ -424,6 +457,54 @@ class AdminServices
         }
     }
 
+    public static function getLoanPlans($request)
+    {
+        try {
+            // $uid = $request->input('uid');
+            $loan = Loans::select('loans.*', 'users.first_name', 'users.last_name', 'users.email')->join('users', 'users.id', '=', 'loans.user_id')->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $loan], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getUserLoanPlans($request)
+    {
+        try {
+            $uid = $request->input('uid');
+            $loan = Loans::select('loans.*', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'loans.user_id')
+            ->where('loans.user_id', '=', $uid)
+            ->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $loan], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getLoanPlanByCard($request)
+    {
+        try {
+            $card_no = $request->input('card_id');
+            $loan = Loans::select('loans.*', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'loans.card_id')
+            ->where(['loans.card_id' => $card_no])->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $loan], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+
     public static function purchases($request)
     {    
         try{
@@ -433,12 +514,9 @@ class AdminServices
             $admin = Staff::where('id', $staff_id)->first();
             $card_id = $request->input('card_id');
             $purchase = Purchase::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
-            // var_dump($purchase);exit();
             $amount = $request->amount;
 
             $purchase_after = ($purchase->amount_after == null) ? 0 : 0;
-    //     $costPerPage = ($channel == 'wallet') ? env('COST_PER_PAGE') : env('UNIT_COST_PER_PAGE');
-
             $transaction = new GeneralHelper;
             $amount_after = $transaction->transaction($amount, $purchase_after, 'cr');  
             $transaction_type = 'credit';
