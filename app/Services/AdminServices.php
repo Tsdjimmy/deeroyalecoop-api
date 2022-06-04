@@ -221,18 +221,7 @@ class AdminServices
                 ->join('users', 'cards.user_id', '=', 'users.id')
                 ->join('savings', 'cards.user_id', '=', 'savings.user_id')
                 ->get();
-
-        if(!$cards)
-        return response()->json(['message' => 'No cards were found'],200);
-
-        // $savingsData = Savings::where('user_id', $uid)->get();
-        // var_dump($savingsData[0]->amount);exit();
-        // $savingsAmount = $savingsData[0]->amount;
-
-        // $cards_conv = json_decode(json_encode($cards), true);
-            // $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
         
-        if(!empty($cards))
         return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
     }
 
