@@ -4,18 +4,16 @@
 namespace App\services;
 
 use App\Models\User;
-use App\Models\Wallet;
-use App\Models\BankAccounts;
-use App\Models\FundTransfer;
-use App\Models\Bank;
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\Response;
-use GuzzleHttp\Client;
+use App\Models\Cards;
+use App\Models\Lease;
+use App\Models\Loans;
+use App\Models\Savings;
+use App\Models\Purchase;
 use Illuminate\Support\Str;
+use App\Models\TransactionLogs;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Auth;
+
 
 class UserServices
 {
@@ -63,19 +61,19 @@ class UserServices
         return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
     }
 
-    public static function notification($request)
-    {
-        $notification = Notification::latest()->take(5)->get();
-        if(empty($notification))
-        return response()->json(['message' => 'Notifications will appear here'],200);
+    // public static function notification($request)
+    // {
+    //     $notification = Notification::latest()->take(5)->get();
+    //     if(empty($notification))
+    //     return response()->json(['message' => 'Notifications will appear here'],200);
 
-        if(!empty($notification))
-        return response()->json(['message' => 'Fetched Successfully', 'data' => $notification],200);
-    }
+    //     if(!empty($notification))
+    //     return response()->json(['message' => 'Fetched Successfully', 'data' => $notification],200);
+    // }
 
     public static function transactionHistory($request)
     {
-        $transaction_log = Transaction_log::latest()->take(10)->get();
+        $transaction_log = TransactionLogs::latest()->take(10)->get();
         if(empty($transaction_log))
         return response()->json(['message' => 'Transaction history will appear here'],200);
 
@@ -93,16 +91,16 @@ class UserServices
         if(!empty($request))
         {
             if($request->input('type') == 'savings')
-            $transaction = savings::latest()->take(50)->get();
+            $transaction = Savings::latest()->take(50)->get();
 
             if($request->input('type') == 'loan')
-            $transaction = loan::latest()->take(50)->get();
+            $transaction = Loans::latest()->take(50)->get();
 
             if($request->input('type') == 'purchases')
-            $transaction = purchases::latest()->take(50)->get();
+            $transaction = Purchase::latest()->take(50)->get();
 
             if($request->input('type') == 'leases')
-            $transaction = leases::latest()->take(50)->get();
+            $transaction = Lease::latest()->take(50)->get();
         }
 
         return response()->json(['message' => 'Data Fetched', 'data' => $transaction],200);

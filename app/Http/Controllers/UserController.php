@@ -2,8 +2,9 @@
 
 namespace App\Http\Controllers;
 
-use App\Services\UserServices;
 use Illuminate\Http\Request;
+use App\Services\UserServices;
+use App\services\AuthenticationServices;
 
 class UserController extends Controller
 {
@@ -25,6 +26,11 @@ class UserController extends Controller
     public function resetPassword(Request $request)
     {
         return AuthenticationServices::resetPassword($request);
+    }
+
+    public function transactionHistory(Request $request)
+    {
+        return UserServices::transactionHistory($request);
     }
 
 

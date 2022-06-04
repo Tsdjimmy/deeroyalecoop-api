@@ -22,7 +22,7 @@ Route::post('/admin/register', [\App\Http\Controllers\AdminController::class, 'r
 Route::post('/admin/login', [\App\Http\Controllers\AdminController::class, 'login']);
 
 Route::post('/user/register', [\App\Http\Controllers\UserController::class, 'register']);
-Route::post('/user/login', [\App\Http\Controllers\UserController::class, 'login']);
+Route::post('/user/login', [\App\Http\Controllers\UserController::class, 'signIn']);
 
 
 Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin'], function () {
@@ -33,6 +33,7 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
     Route::get('list-branches', [\App\Http\Controllers\AdminController::class, 'listBranches']);
     Route::post('credit-user-savings', [\App\Http\Controllers\AdminController::class, 'creditSavings']);
     Route::post('debit-user-savings', [\App\Http\Controllers\AdminController::class, 'debitSavings']);
+    Route::get('get-user-savings', [\App\Http\Controllers\AdminController::class, 'getUserSavings']);
     Route::get('get-savings-by-card', [\App\Http\Controllers\AdminController::class, 'getUserSavingsbyCard']);
     Route::get('get-savings', [\App\Http\Controllers\AdminController::class, 'getAllSavings']);
     Route::post('create-loan-plan', [\App\Http\Controllers\AdminController::class, 'createLoanPlan']);
@@ -42,7 +43,16 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
     Route::get('loan-by-user', [\App\Http\Controllers\AdminController::class, 'getUserLoanPlans']);
     Route::post('add-card', [\App\Http\Controllers\AdminController::class, 'addCard']);
     Route::get('get-card', [\App\Http\Controllers\AdminController::class, 'getCard']);
-    Route::post('create-purchase', [\App\Http\Controllers\AdminController::class, 'purchases']);
+    Route::post('create-purchase', [\App\Http\Controllers\AdminController::class, 'createPurchase']);
+    Route::post('update-purchase', [\App\Http\Controllers\AdminController::class, 'updatePurchase']);
+    Route::get('purchase-plans', [\App\Http\Controllers\AdminController::class, 'getPurchasePlans']);
+    Route::get('user-purchase', [\App\Http\Controllers\AdminController::class, 'getUserPurchasePlans']);
+    Route::get('purchase-by-card', [\App\Http\Controllers\AdminController::class, 'getPurchasePlanByCard']);
+    Route::post('create-lease-plan', [\App\Http\Controllers\AdminController::class, 'createLeasePlan']);
+    Route::post('repay-lease', [\App\Http\Controllers\AdminController::class, 'repayLease']);
+    Route::get('get-lease', [\App\Http\Controllers\AdminController::class, 'getLeasePlans']);
+    Route::get('get-user-lease', [\App\Http\Controllers\AdminController::class, 'getUserLeasePlans']);
+    Route::get('get-lease-by-card', [\App\Http\Controllers\AdminController::class, 'getLeasePlanByCard']);
     Route::get('list-users', [\App\Http\Controllers\AdminController::class, 'listUsers']);
     Route::get('get-user-details/{id}', [\App\Http\Controllers\AdminController::class, 'getUser']);
     Route::post('edit-user', [\App\Http\Controllers\AdminController::class, 'editUser']);
@@ -52,7 +62,6 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
 Route::group(['middleware' => ['auth:api', 'scopes:user'], 'prefix' => 'users'], function () {
     Route::get('/dashboard', [\App\Http\Controllers\UserController::class, 'dashboard']); #GOD IS IN CHARGE
     // Route::get('get-card', [\App\Http\Controllers\UserController::class, 'getCard']);
-    Route::get('notification', [\App\Http\Controllers\UserController::class, 'notification']);
     Route::get('transaction-history', [\App\Http\Controllers\UserController::class, 'transactionHistory']);
     Route::get('transaction/{type}', [\App\Http\Controllers\UserController::class, 'transactionByType']);
 

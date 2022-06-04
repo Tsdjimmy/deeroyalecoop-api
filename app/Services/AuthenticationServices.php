@@ -36,9 +36,9 @@ class AuthenticationServices
             $password = $request->input('password');
             $phone_number = $request->input('phone_number');
 
-            if (User::where('email', $email)->count() > 0) return response()->json(['message' => 'Email already in use.'], 400);
+            if (User::where('email', $email)->count() > 0) return response()->json(['message' => 'Email already in use.'], 200);
 
-            if (User::where('phone_number', $phone_number)->count() > 0) return response()->json(['message' => 'Phone number already in use'], 400);
+            if (User::where('phone_number', $phone_number)->count() > 0) return response()->json(['message' => 'Phone number already in use'], 200);
 
             $user = new User();
             $user->full_name = $full_name;

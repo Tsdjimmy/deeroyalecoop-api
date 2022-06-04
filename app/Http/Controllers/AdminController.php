@@ -48,6 +48,11 @@ class AdminController extends Controller
         return AdminServices::debitSavings($request);
     }
 
+    public function getUserSavings(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getUserSavings($request);
+    }
+
     public function getUserSavingsbyCard(Request $request): \Illuminate\Http\JsonResponse
     {
         return AdminServices::getUserSavingsbyCard($request);
@@ -93,9 +98,54 @@ class AdminController extends Controller
         return AdminServices::getCard($request);
     }
    
-    public function purchases(Request $request): \Illuminate\Http\JsonResponse
+    public function createPurchase(Request $request): \Illuminate\Http\JsonResponse
     {
-        return AdminServices::purchases($request);
+        return AdminServices::createPurchase($request);
+    }
+
+    public function updatePurchase(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::updatePurchase($request);
+    }
+
+    public function getPurchasePlans(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getPurchasePlans($request);
+    }
+
+    public function getUserPurchasePlans(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getUserPurchasePlans($request);
+    }
+
+    public function getPurchasePlanByCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getPurchasePlanByCard($request);
+    }
+
+    public function createLeasePlan(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::createLeasePlan($request);
+    }
+
+    public function repayLease(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::repayLease($request);
+    }
+
+    public function getLeasePlans(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getLeasePlans($request);
+    }
+
+    public function getUserLeasePlans(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getUserLeasePlans($request);
+    }
+
+    public function getLeasePlanByCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getLeasePlanByCard($request);
     }
 
     public function listUsers(Request $request): \Illuminate\Http\JsonResponse

@@ -4,24 +4,25 @@
 namespace App\services;
 
 
-use App\Domain\Services\Kernel;
-use App\Domain\Services\ServicesInterface;
-use App\helpers\GeneralHelper;
-use App\helpers\SMSHelpers;
-use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
-use Maatwebsite\Excel\Facades\Excel;
-use SebastianBergmann\RecursionContext\Exception;
-use App\Models\Staff;
-use App\Models\Branches;
-use App\Models\Savings;
-use App\Models\Rates;
-use App\Models\Loans;
+use App\Models\User;
 use App\Models\Cards;
+use App\Models\Lease;
+use App\Models\Loans;
+use App\Models\Rates;
+use App\Models\Staff;
+use App\Models\Savings;
+use App\Models\Branches;
 use App\Models\Purchase;
+use App\helpers\SMSHelpers;
+use Illuminate\Support\Str;
+use App\helpers\GeneralHelper;
+use App\Domain\Services\Kernel;
+use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
+use App\Domain\Services\ServicesInterface;
+use SebastianBergmann\RecursionContext\Exception;
 
 class AdminServices
 {
@@ -225,7 +226,7 @@ class AdminServices
                 ->get();
 
         if(!$cards)
-        return response()->json(['message' => 'No cards were found'],404);
+        return response()->json(['message' => 'No cards were found'],200);
 
         $savingsData = Savings::where('user_id', $uid)->get();
         // var_dump($savingsData[0]->amount);exit();
@@ -287,18 +288,20 @@ class AdminServices
         try{
             $user_id = $request->input('user_id');
             $staff_id = $request->user()->id;
+            $savingsId = $request->input('savings_id');
             $user = User::where('id', $user_id)->first();
             $card_id = $request->input('card_id');
             $admin = Staff::where('id', $staff_id)->first();
-            $savings = Savings::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
+            $savings = Savings::where(['id' => $savingsId, 'user_id' => $user_id, 'card_id' => $card_id])->first();
             $amount = $request->amount;
 
             $transaction = new GeneralHelper;
             $amount_after = $transaction->transaction($amount, $savings->amount_after, 'dr');  
             $transaction_type = 'debit';
 
-            $savingsData = Savings::where('user_id', $user->id)
-            ->update(['staff_id' =>  $staff_id,
+            $savingsData = Savings::where(['id' => $savingsId,'user_id', $user->id, 'card_id' => $card_id])
+            ->update([
+                    'staff_id' =>  $staff_id,
                     'amount' => $request->amount,
                     'amount_before' => $savings->amount_after,
                     'amount_after' => $amount_after,
@@ -309,7 +312,7 @@ class AdminServices
             $user_name = $user->last_name;
             $phone_number = $user->phone;
             $message = "Dear ". $user_name." , your Deeroyale account has been debited of the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
-            $sms = new SMSHelper();
+            $sms = new SmsHelper();
             $sms::sendSMS($phone_number, $message);
 
             return response()->json([
@@ -335,6 +338,22 @@ class AdminServices
 
             // if($savings === 'false') return response()->json(['message' => 'No record found for this card no'], 404);
 
+            return response()->json(['message' => 'Fetched Successfully', 'data' => $savings],200);
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred',
+            'short_description' => $e->getMessage()], 400);
+        }
+    }
+
+    public static function getUserSavings($request)
+    {
+        try{
+            $uid = $request->input('uid');
+            $savings = Savings::select('savings.*', 'users.first_name', 'users.last_name')
+            ->join('users', 'users.id', '=', 'savings.user_id')           
+             ->where('savings.user_id', '=', $uid)
+            ->get();
             return response()->json(['message' => 'Fetched Successfully', 'data' => $savings],200);
         }catch (\Exception $e)
         {
@@ -427,13 +446,14 @@ class AdminServices
         try{
             $user_id = $request->input('user_id');
             $card_id = $request->input('card_id');
+            $loanId = $request->input('loan_id');
             $amount_paid = $request->input('amount_paid');
             $staff_id = $request->user()->id;
             $transaction_type = 'debit';
             $transaction_tag = 'loans';
-            $old_amount = Loans::where(['user_id' => $user_id, 'card_id' => $card_id])->pluck('amount_paid');
+            $old_amount = Loans::where(['id' => $loanId, 'user_id' => $user_id, 'card_id' => $card_id])->pluck('amount_paid');
             $new_amount = $old_amount[0] + $amount_paid;
-            $loan = Loans::where(['user_id' => $user_id, 'card_id' => $card_id])
+            $loan = Loans::where(['id' => $loanId, 'user_id' => $user_id, 'card_id' => $card_id])
                     ->update([
                         'amount_paid' => $new_amount,
                         'user_id' => $user_id,
@@ -504,27 +524,65 @@ class AdminServices
         }
     }
 
+    public static function createPurchase($request)
+    {    
+        try{
+            $user_id = $request->input('user_id');
+            $item = $request->input('item');
+            $staff_id = $request->user()->id;
+            $user = User::where('id', $user_id)->first();
+            $admin = Staff::where('id', $staff_id)->first();
+            $card_id = $request->input('card_id');
+            $amount = $request->input('amount');
+            $transaction_type = 'debit';
+            $purchase = new Purchase();
+            $purchase->item = $item;
+            $purchase->user_id = $user_id;
+            $purchase->staff_id = $staff_id;
+            $purchase->card_id = $card_id;
+            $purchase->amount = $amount;
+            $purchase->transaction_type = $transaction_type;
+            $purchase->save();
+            $transaction = new GeneralHelper;
+            $transaction->transactionLog($user_id, $amount, $staff_id, 'purchases', $transaction_type, $card_id);
 
-    public static function purchases($request)
+            return response()->json([
+                'message' => 'Credited Successfully',
+                'data' => $purchase
+            ], 200);
+        }catch (\Exception $e)
+            {
+                return response()->json([
+                    'message' => 'An error occurred accessing your account',
+                    'short_description' => $e->getMessage(),
+                ], 400);
+            }     
+    }
+
+    public static function updatePurchase($request)
     {    
         try{
             $user_id = $request->input('user_id');
             $staff_id = $request->user()->id;
             $user = User::where('id', $user_id)->first();
+            $uid = $user->id;
             $admin = Staff::where('id', $staff_id)->first();
+            $admin_id = $admin->id;
+            $purchaseId = $request->input('id');
             $card_id = $request->input('card_id');
-            $purchase = Purchase::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
-            $amount = $request->amount;
+            $purchase = Purchase::where(['id' => $purchaseId, 'user_id' => $uid, 'card_id' => $card_id])->first();
+            // dd($purchase);
+            // exit();
+            $amount = $request->input('amount');
 
-            $purchase_after = ($purchase->amount_after == null) ? 0 : 0;
+            $purchase_after = ($purchase->amount_after == null) ? 0 : $purchase->amount_after;
             $transaction = new GeneralHelper;
             $amount_after = $transaction->transaction($amount, $purchase_after, 'cr');  
             $transaction_type = 'credit';
 
-            $purchaseData = Purchase::where('user_id', $user->id)
+            $purchaseData = Purchase::where(['id' => $purchaseId, 'user_id' => $user_id, 'card_id' => $card_id])
             ->update([
-                    'staff_id' =>  $staff_id,
-                    'amount' => $request->amount,
+                    'staff_id' =>  $admin_id,
                     'amount_before' => $purchase->amount_after,
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
@@ -544,9 +602,171 @@ class AdminServices
             }     
     }
 
-    public static function leases()
+    public static function getPurchasePlans($request)
     {
+        try {
+            // $uid = $request->input('uid');
+            $purchase = Purchase::select('purchases.*', 'users.first_name', 'users.last_name', 'users.email')->join('users', 'users.id', '=', 'purchases.user_id')->get();
 
+            return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getUserPurchasePlans($request)
+    {
+        try {
+            $uid = $request->input('uid');
+            $purchase = Purchase::select('purchases.*', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'purchases.user_id')
+            ->where('purchases.user_id', '=', $uid)
+            ->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getPurchasePlanByCard($request)
+    {
+        try {
+            $card_no = $request->input('card_id');
+            $purchase = Purchase::select('purchases.*', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'purchases.card_id')
+            ->where(['purchases.card_id' => $card_no])->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function createLeasePlan($request)
+    {
+        try{
+            $user_id = $request->input('user_id');
+            $staff_id = $request->user()->id;
+            $equipment = $request->input('equipment_name');
+            $user = User::where('id', $user_id)->first();
+            $admin = Staff::where('id', $staff_id)->first();
+            $card_id = $request->input('card_id');
+            $amount = $request->input('amount');
+            $transaction_type = 'debit';
+
+            $lease = new Lease();
+            $lease->equipment = $equipment;
+            $lease->user_id = $user_id;
+            $lease->staff_id = $staff_id;
+            $lease->card_id = $card_id;
+            $lease->amount = $amount;
+            $lease->transaction_type = $transaction_type;
+            $lease->save();
+
+            return response()->json([
+                'message' => 'Credited Successfully',
+                'data' => $lease
+            ], 200);
+        }catch (\Exception $e)
+            {
+                return response()->json([
+                    'message' => 'An error occurred accessing your account',
+                    'short_description' => $e->getMessage(),
+                ], 400);
+            }     
+    }
+
+    public static function repayLease($request)
+    {    
+        try{
+            $user_id = $request->input('user_id');
+            $staff_id = $request->user()->id;
+            $equipment = $request->input('equipment');
+            $user = User::where('id', $user_id)->first();
+            $admin = Staff::where('id', $staff_id)->first();
+            $card_id = $request->input('card_id');
+            $lease = Lease::where(['user_id' => $user_id, 'card_id' => $card_id])->first();
+            $amount = $request->input('amount');
+
+            $lease_after = ($lease->amount_after == null) ? 0 : $lease->amount_after;
+            $transaction = new GeneralHelper;
+            $amount_after = $transaction->transaction($amount, $lease_after, 'cr');  
+            $transaction_type = 'credit';
+
+            $leaseData = Lease::where('user_id', $user->id)
+            ->update([
+                    'staff_id' =>  $staff_id,
+                    'amount_before' => $lease->amount_after,
+                    'amount_after' => $amount_after,
+                    'transaction_type' => $transaction_type
+                ]);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'leases', $transaction_type, $card_id);
+
+            return response()->json([
+                'message' => 'Credited Successfully',
+                'data' => $leaseData
+            ], 200);
+        }catch (\Exception $e)
+            {
+                return response()->json([
+                    'message' => 'An error occurred accessing your account',
+                    'short_description' => $e->getMessage(),
+                ], 400);
+            }     
+    }
+
+    public static function getLeasePlans($request)
+    {
+        try {
+            // $uid = $request->input('uid');
+            $lease = Lease::select('leases.*', 'users.first_name', 'users.last_name', 'users.email')->join('users', 'users.id', '=', 'leases.user_id')->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $lease], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getUserLeasePlans($request)
+    {
+        try {
+            $uid = $request->input('uid');
+            $leases = Lease::select('leases.*', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'leases.user_id')
+            ->where('leases.user_id', '=', $uid)
+            ->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $leases], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getLeasePlanByCard($request)
+    {
+        try {
+            $card_no = $request->input('card_id');
+            $leases = Lease::select('leases.*', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'leases.card_id')
+            ->where(['leases.card_id' => $card_no])->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $leases], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
     }
 
     public static function listUsers()
