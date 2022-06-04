@@ -216,27 +216,24 @@ class AdminServices
     
     public static function getCard($request)
     {
-        $uid = $request->input('uid');
-        $cards = Cards::where('cards.user_id', $uid)
-                ->select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name',
+        $cards = Cards::select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name', 'savings.*',
                  'users.email', 'cards.active', 'cards.status')
                 ->join('users', 'cards.user_id', '=', 'users.id')
-                // ->leftjoin('savings', 'cards.user_id', '=', 'savings.user_id')
-                // ->join('savings', 'wallet.user_id', '=', 'user.id')
+                ->join('savings', 'cards.user_id', '=', 'savings.user_id')
                 ->get();
 
         if(!$cards)
         return response()->json(['message' => 'No cards were found'],200);
 
-        $savingsData = Savings::where('user_id', $uid)->get();
+        // $savingsData = Savings::where('user_id', $uid)->get();
         // var_dump($savingsData[0]->amount);exit();
-        $savingsAmount = $savingsData[0]->amount;
+        // $savingsAmount = $savingsData[0]->amount;
 
-        $cards_conv = json_decode(json_encode($cards), true);
-            $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
+        // $cards_conv = json_decode(json_encode($cards), true);
+            // $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
         
         if(!empty($cards))
-        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards_conv],200);
+        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
     }
 
     public static function listAllCard($request)

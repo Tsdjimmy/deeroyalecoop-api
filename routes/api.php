@@ -43,7 +43,7 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
     Route::get('loan-by-user', [\App\Http\Controllers\AdminController::class, 'getUserLoanPlans']);
     Route::post('add-card', [\App\Http\Controllers\AdminController::class, 'addCard']);
     Route::get('get-card', [\App\Http\Controllers\AdminController::class, 'getCard']);
-    Route::get('all-cards', [\App\Http\Controllers\AdminController::class, 'listAllCard']);
+    // Route::get('all-cards', [\App\Http\Controllers\AdminController::class, 'listAllCard']);
     Route::post('create-purchase', [\App\Http\Controllers\AdminController::class, 'createPurchase']);
     Route::post('update-purchase', [\App\Http\Controllers\AdminController::class, 'updatePurchase']);
     Route::get('purchase-plans', [\App\Http\Controllers\AdminController::class, 'getPurchasePlans']);
