@@ -245,8 +245,6 @@ class AdminServices
                  'users.email', 'cards.active', 'cards.status')
                 ->join('users', 'cards.user_id', '=', 'users.id')
                 ->join('savings', 'cards.user_id', '=', 'savings.user_id')
-                // ->leftjoin('savings', 'cards.user_id', '=', 'savings.user_id')
-                // ->join('savings', 'wallet.user_id', '=', 'user.id')
                 ->get();
 
         if(!$cards)
