@@ -238,6 +238,30 @@ class AdminServices
         if(!empty($cards))
         return response()->json(['message' => 'Fetched Successfully', 'data' => $cards_conv],200);
     }
+
+    public static function listAllCard($request)
+    {
+        $cards = Cards::select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name', 'savings.*',
+                 'users.email', 'cards.active', 'cards.status')
+                ->join('users', 'cards.user_id', '=', 'users.id')
+                ->join('savings', 'cards.user_id', '=', 'savings.user_id')
+                // ->leftjoin('savings', 'cards.user_id', '=', 'savings.user_id')
+                // ->join('savings', 'wallet.user_id', '=', 'user.id')
+                ->get();
+
+        if(!$cards)
+        return response()->json(['message' => 'No cards were found'],200);
+
+        // $savingsData = Savings::where('user_id', 'cards.id')->get();
+        // // var_dump($savingsData[0]->amount);exit();
+        // $savingsAmount = $savingsData[0]->amount;
+
+        // $cards_conv = json_decode(json_encode($cards), true);
+        //     $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
+        
+        if(!empty($cards))
+        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
+    }
         
 
     public static function creditSavings($request)

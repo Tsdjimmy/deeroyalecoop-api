@@ -97,6 +97,11 @@ class AdminController extends Controller
     {
         return AdminServices::getCard($request);
     }
+
+    public function listAllCard(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::listAllCard($request);
+    }
    
     public function createPurchase(Request $request): \Illuminate\Http\JsonResponse
     {
