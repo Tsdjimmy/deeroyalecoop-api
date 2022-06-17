@@ -218,34 +218,34 @@ class AdminServices
     {
         $cards = Cards::select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name', 'savings.*',
                  'users.email', 'cards.active', 'cards.status')
-                ->join('users', 'cards.user_id', '=', 'users.id')
-                ->join('savings', 'cards.user_id', '=', 'savings.user_id')
+                ->leftjoin('users', 'cards.user_id', '=', 'users.id')
+                ->leftjoin('savings', 'cards.user_id', '=', 'savings.user_id')
                 ->get();
         
         return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
     }
 
-    public static function listAllCard($request)
-    {
-        $cards = Cards::select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name', 'savings.*',
-                 'users.email', 'cards.active', 'cards.status')
-                ->join('users', 'cards.user_id', '=', 'users.id')
-                ->join('savings', 'cards.user_id', '=', 'savings.user_id')
-                ->get();
+    // public static function listAllCard($request)
+    // {
+    //     $cards = Cards::select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name', 'savings.*',
+    //              'users.email', 'cards.active', 'cards.status')
+    //             ->join('users', 'cards.user_id', '=', 'users.id')
+    //             ->join('savings', 'cards.user_id', '=', 'savings.user_id')
+    //             ->get();
 
-        if(!$cards)
-        return response()->json(['message' => 'No cards were found'],200);
+    //     if(!$cards)
+    //     return response()->json(['message' => 'No cards were found'],200);
 
-        // $savingsData = Savings::where('user_id', 'cards.id')->get();
-        // // var_dump($savingsData[0]->amount);exit();
-        // $savingsAmount = $savingsData[0]->amount;
+    //     // $savingsData = Savings::where('user_id', 'cards.id')->get();
+    //     // // var_dump($savingsData[0]->amount);exit();
+    //     // $savingsAmount = $savingsData[0]->amount;
 
-        // $cards_conv = json_decode(json_encode($cards), true);
-        //     $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
+    //     // $cards_conv = json_decode(json_encode($cards), true);
+    //     //     $cards_conv[0]['current_savings_balance'] = $savingsAmount;  
         
-        if(!empty($cards))
-        return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
-    }
+    //     if(!empty($cards))
+    //     return response()->json(['message' => 'Fetched Successfully', 'data' => $cards],200);
+    // }
         
 
     public static function creditSavings($request)
@@ -614,7 +614,9 @@ class AdminServices
     {
         try {
             // $uid = $request->input('uid');
-            $purchase = Purchase::select('purchases.*', 'users.first_name', 'users.last_name', 'users.email')->join('users', 'users.id', '=', 'purchases.user_id')->get();
+            $purchase = Purchase::select('purchases.*', 'staff.full_name as staff_full_name', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'purchases.user_id')
+            ->join('staff', 'staff.id', '=', 'purchases.staff_id')->get();
 
             return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
 
@@ -628,8 +630,9 @@ class AdminServices
     {
         try {
             $uid = $request->input('uid');
-            $purchase = Purchase::select('purchases.*', 'users.first_name', 'users.last_name', 'users.email')
+            $purchase = Purchase::select('purchases.*', 'staff.full_name as staff_full_name', 'users.first_name', 'users.last_name', 'users.email')
             ->join('users', 'users.id', '=', 'purchases.user_id')
+            ->join('staff', 'staff.id', '=', 'purchases.staff_id')
             ->where('purchases.user_id', '=', $uid)
             ->get();
 
@@ -645,8 +648,9 @@ class AdminServices
     {
         try {
             $card_no = $request->input('card_id');
-            $purchase = Purchase::select('purchases.*', 'users.first_name', 'users.last_name', 'users.email')
+            $purchase = Purchase::select('purchases.*', 'staff.full_name as staff_full_name', 'users.first_name', 'users.last_name', 'users.email')
             ->join('users', 'users.id', '=', 'purchases.card_id')
+            ->join('staff', 'staff.id', '=', 'purchases.staff_id')
             ->where(['purchases.card_id' => $card_no])->get();
 
             return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
