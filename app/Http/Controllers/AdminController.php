@@ -128,6 +128,11 @@ class AdminController extends Controller
         return AdminServices::getPurchasePlanByCard($request);
     }
 
+    public function getPurchasePlanById(Request $request): \Illuminate\Http\JsonResponse
+    {
+        return AdminServices::getPurchasePlanById($request);
+    }
+
     public function createLeasePlan(Request $request): \Illuminate\Http\JsonResponse
     {
         return AdminServices::createLeasePlan($request);

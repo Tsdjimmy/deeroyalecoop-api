@@ -216,8 +216,7 @@ class AdminServices
     
     public static function getCard($request)
     {
-        $cards = Cards::select('cards.id', 'cards.card_no','users.first_name' , 'users.last_name', 'savings.*',
-                 'users.email', 'cards.active', 'cards.status')
+        $cards = Cards::select('cards.*','users.first_name' , 'users.last_name', 'savings.amount_before as savings_amount_before', 'savings.amount_after as savings_amount_after', 'users.email', 'users.id as user_id')
                 ->leftjoin('users', 'cards.user_id', '=', 'users.id')
                 ->leftjoin('savings', 'cards.user_id', '=', 'savings.user_id')
                 ->get();
@@ -652,6 +651,23 @@ class AdminServices
             ->join('users', 'users.id', '=', 'purchases.card_id')
             ->join('staff', 'staff.id', '=', 'purchases.staff_id')
             ->where(['purchases.card_id' => $card_no])->get();
+
+            return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
+
+        }catch (\Exception $e)
+        {
+            return response()->json(['message' => 'An error occurred', 'short_description' => $e->getMessage()]);
+        }
+    }
+
+    public static function getPurchasePlanById($request)
+    {
+        try {
+            $purchaseId = $request->input('purchase_id');
+            $purchase = Purchase::select('purchases.*', 'staff.full_name as staff_full_name', 'users.first_name', 'users.last_name', 'users.email')
+            ->join('users', 'users.id', '=', 'purchases.card_id')
+            ->join('staff', 'staff.id', '=', 'purchases.staff_id')
+            ->where(['purchases.id' => $purchaseId])->get();
 
             return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
 

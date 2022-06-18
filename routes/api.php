@@ -49,6 +49,7 @@ Route::group(['middleware' => ['auth:staff', 'scopes:staff'], 'prefix' => 'admin
     Route::get('purchase-plans', [\App\Http\Controllers\AdminController::class, 'getPurchasePlans']);
     Route::get('user-purchase', [\App\Http\Controllers\AdminController::class, 'getUserPurchasePlans']);
     Route::get('purchase-by-card', [\App\Http\Controllers\AdminController::class, 'getPurchasePlanByCard']);
+    Route::get('purchase-by-id', [\App\Http\Controllers\AdminController::class, 'getPurchasePlanById']);
     Route::post('create-lease-plan', [\App\Http\Controllers\AdminController::class, 'createLeasePlan']);
     Route::post('repay-lease', [\App\Http\Controllers\AdminController::class, 'repayLease']);
     Route::get('get-lease', [\App\Http\Controllers\AdminController::class, 'getLeasePlans']);
