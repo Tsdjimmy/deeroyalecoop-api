@@ -18,6 +18,7 @@ use App\helpers\SMSHelpers;
 use Illuminate\Support\Str;
 use App\helpers\GeneralHelper;
 use App\Domain\Services\Kernel;
+use App\Models\TransactionLogs;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Validator;
@@ -269,7 +270,7 @@ class AdminServices
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id, $savingsData->id);
             
             $user_name = $user->last_name;
             $phone_number = $user->phone;
@@ -314,7 +315,7 @@ class AdminServices
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'savings', $transaction_type, $card_id, $savingsData->id);
            
             $user_name = $user->last_name;
             $phone_number = $user->phone;
@@ -411,6 +412,8 @@ class AdminServices
             $interest_id = $rate->interest;
             $interest = $rate->interest;
             $status = 'running';
+            $transaction_type = 'debit';
+            $transaction_tag = 'loans';
     
             $loan = new Loans();
             $loan->loan_purpose = $loan_purpose;
@@ -432,7 +435,8 @@ class AdminServices
             // $message = "Dear ". $user_name." , your Deeroyale account has been credited with the sum of ".$amount. ". Your new balance is ".$amount_after.". Thank you for choosing Deeroyale.";
             // $sms = new SMSHelper();
             // $sms::sendSMS($phone_number, $message);
-
+            $transaction = new GeneralHelper;
+            $transaction->transactionLog($user_id, $amount_paid, $staff_id, $transaction_tag, $transaction_type, $card_id, $loan->id);
     
             return response()->json([
                 'message' => 'Loan Plan Created Successfully',
@@ -468,7 +472,7 @@ class AdminServices
                         'card_id' => $card_id,
                     ],200);
                     $transaction = new GeneralHelper;
-                    $transaction->transactionLog($user_id, $amount_paid, $staff_id, $transaction_tag, $transaction_type, $card_id);
+                    $transaction->transactionLog($user_id, $amount_paid, $staff_id, $transaction_tag, $transaction_type, $card_id, $loan->id);
 
                     return response()->json([
                         "message" => "Loan repayment added successfully",
@@ -551,7 +555,7 @@ class AdminServices
             $purchase->transaction_type = $transaction_type;
             $purchase->save();
             $transaction = new GeneralHelper;
-            $transaction->transactionLog($user_id, $amount, $staff_id, 'purchases', $transaction_type, $card_id);
+            $transaction->transactionLog($user_id, $amount, $staff_id, 'purchases', $transaction_type, $card_id, $purchase->id);
 
             return response()->json([
                 'message' => 'Credited Successfully',
@@ -575,9 +579,9 @@ class AdminServices
             $uid = $user->id;
             $admin = Staff::where('id', $staff_id)->first();
             $admin_id = $admin->id;
-            $purchaseId = $request->input('id');
-            $card_id = $request->input('card_id');
-            $purchase = Purchase::where(['id' => $purchaseId, 'user_id' => $uid, 'card_id' => $card_id])->first();
+            $purchaseId = $request->input('purchase_id');
+            // $card_id = $request->input('card_id');
+            $purchase = Purchase::where(['id' => $purchaseId, 'user_id' => $uid])->first();
             // dd($purchase);
             // exit();
             $amount = $request->input('amount');
@@ -587,14 +591,14 @@ class AdminServices
             $amount_after = $transaction->transaction($amount, $purchase_after, 'cr');  
             $transaction_type = 'credit';
 
-            $purchaseData = Purchase::where(['id' => $purchaseId, 'user_id' => $user_id, 'card_id' => $card_id])
+            $purchaseData = Purchase::where(['id' => $purchaseId, 'user_id' => $user_id])
             ->update([
                     'staff_id' =>  $admin_id,
                     'amount_before' => $purchase->amount_after,
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'purchases', $transaction_type, $card_id);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'purchases', $transaction_type, $purchase->card_id, $purchase->id);
 
             return response()->json([
                 'message' => 'Credited Successfully',
@@ -669,7 +673,11 @@ class AdminServices
             ->join('staff', 'staff.id', '=', 'purchases.staff_id')
             ->where(['purchases.id' => $purchaseId])->get();
 
-            return response()->json(['message' => 'Data Fetched', 'data' => $purchase], 200);
+            $settledPurchaseData = TransactionLogs::select('transaction_logs.*', 'staff.full_name as staff_full_name')
+            ->where('plan_id', $purchaseId)
+            ->join('staff', 'staff.id', '=', 'transaction_logs.staff_id')->get();
+
+            return response()->json(['message' => 'Data Fetched', 'purchase_data' => $purchase, 'history' => $settledPurchaseData], 200);
 
         }catch (\Exception $e)
         {
@@ -735,7 +743,7 @@ class AdminServices
                     'amount_after' => $amount_after,
                     'transaction_type' => $transaction_type
                 ]);
-                $transaction->transactionLog($user_id, $amount, $staff_id, 'leases', $transaction_type, $card_id);
+                $transaction->transactionLog($user_id, $amount, $staff_id, 'leases', $transaction_type, $card_id, $leaseData->id);
 
             return response()->json([
                 'message' => 'Credited Successfully',

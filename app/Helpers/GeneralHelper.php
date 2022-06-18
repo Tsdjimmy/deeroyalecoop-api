@@ -147,13 +147,14 @@ class GeneralHelper
         }
     }
     
-    public static function transactionLog($user_id, $amount, $staff_id, $transaction_tag, $transaction_type, $card_id)
+    public static function transactionLog($user_id, $amount, $staff_id, $transaction_tag, $transaction_type, $card_id, $plan_id)
     {
         $transaction_log = new TransactionLogs();
         $transaction_log->user_id = $user_id;
         $transaction_log->amount = $amount;
         $transaction_log->staff_id = $staff_id;
         $transaction_log->card_id = $card_id;
+        $transaction_log->plan_id = $plan_id;
         $transaction_log->transaction_tag = $transaction_tag;
         $transaction_log->transaction_type = $transaction_type;
 
